@@ -1,7 +1,7 @@
 class Medication {
-  final String id;      // Este campo solo se asigna desde Appwrite (no se envía en JSON)
+  final String id;
   final String name;
-  final String dosage;
+  final int dosage;
   final DateTime time;
   final String userId;
 
@@ -24,9 +24,11 @@ class Medication {
 
   factory Medication.fromJson(Map<String, dynamic> json) {
     return Medication(
-      id: json['\$id'],              // El ID lo toma del sistema Appwrite
+      id: json['\$id'],
       name: json['name'],
-      dosage: json['dosage'],
+      dosage: json['dosage'] is int
+          ? json['dosage']
+          : int.parse(json['dosage'].toString()),
       time: DateTime.parse(json['time']),
       userId: json['userId'],
     );

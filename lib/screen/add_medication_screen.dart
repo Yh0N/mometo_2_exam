@@ -96,7 +96,7 @@ class AddMedicationScreen extends StatelessWidget {
                     final medication = Medication(
                       id: '',
                       name: nameController.text.trim(),
-                      dosage: dosageController.text.trim(),
+                      dosage: int.parse(dosageController.text.trim()),
                       time: medicationTime,
                       userId: (await Get.find<AuthController>().account.get()).$id,
                     );

@@ -23,7 +23,7 @@ class EditMedicationScreen extends StatelessWidget {
         .firstWhere((med) => med.id == medicationId);
 
     nameController.text = medication.name;
-    dosageController.text = medication.dosage;
+    dosageController.text = medication.dosage.toString();
     selectedTime.value = TimeOfDay.fromDateTime(medication.time);
   }
 
@@ -35,7 +35,31 @@ class EditMedicationScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
-            onPressed: () {},
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Confirmar eliminación'),
+                  content: const Text(
+                      '¿Estás seguro de que quieres eliminar este medicamento?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Cancelar'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text('Eliminar'),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm == true) {
+                await medicationController.deleteMedication(medicationId);
+                Get.back(); // Cierra la pantalla de edición
+              }
+            },
           ),
         ],
       ),
@@ -57,13 +81,14 @@ class EditMedicationScreen extends StatelessWidget {
                 labelText: 'Dosis',
                 border: OutlineInputBorder(),
               ),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             Obx(
               () => ListTile(
                 title: const Text('Hora de la Medicación'),
                 subtitle: Text(
-                  '${selectedTime.value.hour}:${selectedTime.value.minute.toString().padLeft(2, '0')}',
+                  '${selectedTime.value.hour.toString().padLeft(2, '0')}:${selectedTime.value.minute.toString().padLeft(2, '0')}',
                 ),
                 trailing: const Icon(Icons.access_time),
                 onTap: () async {
@@ -92,7 +117,7 @@ class EditMedicationScreen extends StatelessWidget {
                 final medication = Medication(
                   id: medicationId,
                   name: nameController.text,
-                  dosage: dosageController.text,
+                  dosage: int.parse(dosageController.text.trim()),
                   time: medicationTime,
                   userId: (await Get.find<AuthController>().account.get()).$id,
                 );
