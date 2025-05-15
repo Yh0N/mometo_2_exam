@@ -8,7 +8,7 @@ class MedicationController extends GetxController {
   final Databases databases = Databases(AppwriteConfig.getClient());
   final RxList<Medication> medications = <Medication>[].obs;
 
-  // Usar los IDs del config, no valores hardcoded
+  // Usar los IDs del config
   final String databaseId = AppwriteConfig.databaseId;
   final String collectionId = AppwriteConfig.collectionId;
 
@@ -23,12 +23,12 @@ class MedicationController extends GetxController {
       await databases.createDocument(
         databaseId: databaseId,
         collectionId: collectionId,
-        documentId: ID.unique(),  // O ID.auto() para que Appwrite lo asigne
-        data: medication.toJson(), // NO enviar el campo id aquí
+        documentId: ID.unique(),
+        data: medication.toJson(),
       );
       await getMedications();
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar('Error al agregar', e.toString());
     }
   }
 
@@ -39,10 +39,13 @@ class MedicationController extends GetxController {
         collectionId: collectionId,
       );
       medications.value = response.documents
-          .map((doc) => Medication.fromJson(doc.data))
+          .map((doc) => Medication.fromJson({
+                ...doc.data,
+                '\$id': doc.$id, // Asegura que el ID se pase correctamente
+              }))
           .toList();
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar('Error al cargar', e.toString());
     }
   }
 
@@ -52,11 +55,11 @@ class MedicationController extends GetxController {
         databaseId: databaseId,
         collectionId: collectionId,
         documentId: medication.id,
-        data: medication.toJson(), // Tampoco enviar id aquí
+        data: medication.toJson(),
       );
       await getMedications();
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar('Error al actualizar', e.toString());
     }
   }
 
@@ -69,7 +72,27 @@ class MedicationController extends GetxController {
       );
       await getMedications();
     } catch (e) {
-      Get.snackbar('Error', e.toString());
+      Get.snackbar('Error al eliminar', e.toString());
     }
   }
+
+  /// ✅ Nueva función: Marcar como "Tomado"
+  Future<void> markAsTaken(Medication medication) async {
+    try {
+      final now = DateTime.now();
+      final updatedHistory = [...medication.takenHistory, now];
+
+      final updatedMedication = medication.copyWith(
+        takenHistory: updatedHistory,
+      );
+
+      await updateMedication(updatedMedication);
+      Get.snackbar('Registrado', 'Medicación marcada como tomada');
+    } catch (e) {
+      Get.snackbar('Error al marcar como tomado', e.toString());
+    }
+  }
+
+  /// (Opcional) obtener por ID más adelante
+  getMedicationById(String id) {}
 }
